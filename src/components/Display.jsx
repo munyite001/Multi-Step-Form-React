@@ -20,6 +20,13 @@ export default function Display({ active, setActive }) {
     //  Plan
     const [plan, setPlan] = useState(0)
 
+    //  Add-ons
+    const [addOns, setAddOns] = useState({
+        onlineService: false,
+        largerStorage: false,
+        customizableProfile: false
+    })
+
     //  Function to validate the form, make sure there are no errors
     const validateForm = () => {
         const newErrors = {}
@@ -85,6 +92,62 @@ export default function Display({ active, setActive }) {
     //  Function to change plan
     const handlePlanChange = (val) => {
         setPlan(val)
+    }
+
+    const planCosts = {
+        monthly: [9, 12, 15], // Costs for Arcade, Advanced, Pro monthly
+        yearly: [90, 120, 150] // Costs for Arcade, Advanced, Pro yearly
+    };
+    
+    const addOnCosts = {
+        monthly: {
+            onlineService: 1,
+            largerStorage: 2,
+            customizableProfile: 2
+        },
+        yearly: {
+            onlineService: 10,
+            largerStorage: 20,
+            customizableProfile: 20
+        }
+    };
+    
+    const calculateTotalPrice = () => {
+        const planCost = subScriptionType === 0 ? planCosts.monthly[plan] : planCosts.yearly[plan];
+        const addOnCost = Object.keys(addOns).reduce((acc, key) => {
+            return acc + (addOns[key] ? (subScriptionType === 0 ? addOnCosts.monthly[key] : addOnCosts.yearly[key]) : 0);
+        }, 0);
+        return planCost + addOnCost;
+    };
+    
+
+
+    //  Function to toggle add-ons
+    const handleToggleAddOn = (e) => {
+        const id = e.currentTarget.getAttribute("data-id");
+
+        setAddOns((prev) => {
+            return {
+                ...prev,
+                [id]: !prev[id]
+            }
+        })
+
+        
+    }
+
+    //  Success 
+    const [success, setSuccess] = useState(false)
+
+    const handleSuccess = () => {
+        const errors = validateForm();
+
+        if (Object.keys(errors).length === 0) {
+            setSuccess(true)
+        } else { 
+            setActive(1)
+        }
+
     }
     
 
@@ -181,9 +244,110 @@ export default function Display({ active, setActive }) {
                     </div>
                 )
             case 3:
-                return <h1>Page 3</h1>
-            case 4:
-                return <h1>Page 4</h1>
+                return (
+                    <div className="display-box add-ons">
+                        <h2>Pick add-ons</h2>
+                        <p>Add-ons help enhance your gaming experience</p>
+                        <div className="add-ons-container">
+                            <div className={addOns["onlineService"] ? "add-on-box selected":"add-on-box"}  data-id="onlineService" onClick={handleToggleAddOn}>
+                                <div className="check-box">
+                                    <img src="/assets/images/icon-checkmark.svg" alt="" />
+                                </div>
+                                <div className="text-box">
+                                    <h4>Online Service</h4>
+                                    <p>Access to multiplayer games</p>
+                                </div>
+                                <div className="price">{subScriptionType == 0 ? "+$1/mo" : "+$10/yr"}</div>
+                            </div>
+                            <div className={addOns["largerStorage"] ? "add-on-box selected":"add-on-box"} data-id="largerStorage" onClick={handleToggleAddOn}>
+                                <div className="check-box">
+                                    <img src="/assets/images/icon-checkmark.svg" alt="" />
+                                </div>
+                                <div className="text-box">
+                                    <h4>Larger Storage</h4>
+                                    <p>Extra 1TB of cloud save</p>
+                                </div>
+                                <div className="price">{subScriptionType == 0 ? "+$2/mo" : "+$20/yr"}</div>
+                            </div>
+                            <div className={addOns["customizableProfile"] ? "add-on-box selected":"add-on-box"} data-id="customizableProfile" onClick={handleToggleAddOn}>
+                                <div className="check-box">
+                                    <img src="/assets/images/icon-checkmark.svg" alt="" />
+                                </div>
+                                <div className="text-box">
+                                    <h4>Customizable Profile</h4>
+                                    <p>Custom theme on your profile</p>
+                                </div>
+                                <div className="price">{subScriptionType == 0 ? "+$2/mo" : "+$20/yr"}</div>
+                            </div>
+                        </div>
+                        <div className="display-footer">
+                            <button className="btn-2" onClick={() => setActive((prev) => prev - 1)}>Go Back</button>
+                            <button className="btn" onClick={() => setActive((prev) => prev + 1)}>Next Step</button>
+                        </div>
+                    </div>
+                )
+                case 4:
+                    const totalPrice = calculateTotalPrice();
+                    return (
+                        !success ? (
+                            <div className="display-box finalize">
+                                <h2>Finishing up</h2>
+                                <p>Double-check everything looks OK before confirming</p>
+                                <div className="finalize-box">
+                                    <div className="plan-confirmation">
+                                        <div className="text-box">
+                                            <div className="text-wrapper">
+                                                <h4>{plan == 0 ? "Arcade" : plan == 1 ? "Advanced" : "Pro"} ({subScriptionType == 0 ? "Monthly" : "Yearly"})</h4>
+                                            </div>
+                                            <button className="btn-2" style={{textDecoration: "underline"}} onClick={() => {setActive(2)}}>Change</button>
+                                        </div>
+                                        <div className="price">
+                                            {plan == 0 ? subScriptionType == 0 ? "$9/mo" : "$90/yr" : plan == 1 ? subScriptionType == 0 ? "$12/mo" : "$120/yr" : subScriptionType == 0 ? "$15/mo" : "$150/yr"}
+                                        </div>
+                                    </div>
+                                    <hr />
+                                    <div className="add-ons-confirmation">
+                                        {addOns["onlineService"] && 
+                                        <div className="add-on-selected">
+                                            <h4>Online Service</h4>
+                                            <div className="price">{subScriptionType == 0 ? "+$1/mo" : "+$10/yr"}</div>
+                                        </div>}
+                                        {addOns["largerStorage"] && 
+                                        <div className="add-on-selected">
+                                            <h4>Larger Storage</h4>
+                                            <div className="price">{subScriptionType == 0 ? "+$2/mo" : "+$20/yr"}</div>
+                                        </div>}
+                                        {addOns["customizableProfile"] && 
+                                        <div className="add-on-selected">
+                                            <h4>Customizable Profile</h4>
+                                            <div className="price">{subScriptionType == 0 ? "+$2/mo" : "+$20/yr"}</div>
+                                        </div>}
+                                    </div>
+                                </div>
+                                <div className="total-price">
+                                    <h4>Total (per {subScriptionType == 0 ? "month" : "year"})</h4>
+                                    <div className="price">{subScriptionType == 0 ? `$${totalPrice}/mo` : `$${totalPrice}/yr`}</div>
+                                </div>
+                                <div className="display-footer">
+                                    <button className="btn-2" onClick={() => setActive((prev) => prev - 1)}>Go Back</button>
+                                    <button className="btn" onClick={handleSuccess}>Next Step</button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="display-box">
+                                <div className="success-container">
+                                    <img src="/assets/images/icon-thank-you.svg" alt="" />
+                                    <h1>Thank You</h1>
+                                    <p>Thanks for confirming your subscription!
+                                        We hope you have fun using our platform
+                                        if you have any questions, feel free to contact us
+                                        at support@loregaming.com
+
+                                    </p>
+                                </div>
+                            </div>
+                        )
+                    );                
         }
     }
     return(
